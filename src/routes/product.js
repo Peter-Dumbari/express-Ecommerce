@@ -9,9 +9,9 @@ import {
   getProductById,
   productUpdate,
 } from "../controllers/productController.js";
-import auth from "../middleware/auth.js";
-import isAdminOnly from "../middleware/isAdmin.js";
-import uploadImage from "../config/multer.js";
+import auth from "../../middleware/auth.js";
+import isAdminOnly from "../../middleware/isAdmin.js";
+import uploadImage from "../../config/multer.js";
 
 const router = express.Router();
 

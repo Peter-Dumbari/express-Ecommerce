@@ -1,10 +1,10 @@
 import asyncHandler from "express-async-handler";
 import { User } from "../models/user.js";
-import generateToken from "../utils/jwtToken.js";
-import { generateEmailToken } from "../utils/generateEmailToken.js";
+import generateToken from "../../utils/jwtToken.js";
+import { generateEmailToken } from "../../utils/generateEmailToken.js";
 import bcrypt from "bcrypt";
 import axios from "axios";
-import { sendMail } from "../config/mailer.js";
+import { sendMail } from "../../config/mailer.js";
 import crypto from "crypto";
 
 export const registerUser = asyncHandler(async (req, res) => {

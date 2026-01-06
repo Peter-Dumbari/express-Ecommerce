@@ -1,4 +1,4 @@
-import { User } from "../models/user.js";
+import { User } from "../src/models/user.js";
 import jwt from "jsonwebtoken";
 
 const isAdminOnly = async (req, res, next) => {

@@ -1,5 +1,5 @@
 import express from "express";
-import auth from "../middleware/auth.js";
+import auth from "../../middleware/auth.js";
 import {
   cancelOrder,
   createOrder,
@@ -9,7 +9,7 @@ import {
   updateOrderStatus,
   verifyFlutterWavePayment,
 } from "../controllers/orderController.js";
-import isAdminOnly from "../middleware/isAdmin.js";
+import isAdminOnly from "../../middleware/isAdmin.js";
 
 const router = express.Router();
 

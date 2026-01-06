@@ -1,5 +1,5 @@
-import app from "../express-ecommerce/app.js";
-import connectDB from "../express-ecommerce/config/dbConnect.js";
+import app from "./src/app.js";
+import connectDB from "./config/dbConnect.js";
 import http from "http";
 
 const PORT = process.env.PORT || 5000;

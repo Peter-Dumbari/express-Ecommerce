@@ -1,6 +1,6 @@
 import asyncHandler from "express-async-handler";
 import { Order } from "../models/order.js";
-import flw from "../config/flutterwave.js";
+import flw from "../../config/flutterwave.js";
 import axios from "axios";
 
 export const createOrder = asyncHandler(async (req, res) => {
