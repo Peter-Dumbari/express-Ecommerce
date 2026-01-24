@@ -145,7 +145,6 @@ export const googeLogin = asyncHandler(async (req, res) => {
 export const getAllUsers = asyncHandler(async (req, res) => {
   try {
     const users = await User.find();
-    console.log("users", users);
     return res.status(200).json(users);
   } catch (error) {
     console.log("error", error);
