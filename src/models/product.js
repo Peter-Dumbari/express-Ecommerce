@@ -19,6 +19,18 @@ const productSchema = new mongoose.Schema({
     ref: "category",
     required: true,
   },
+  ram: {
+    type: Number,
+    required: true,
+  },
+  storage: {
+    type: Number,
+    required: true,
+  },
+  size: {
+    type: Number,
+    required: true,
+  },
   discountPrice: {
     type: Number,
     validate: {

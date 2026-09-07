@@ -55,6 +55,9 @@ export const createProduct = async (req, res) => {
       description: req.body.description,
       price: req.body.price,
       category: req.body.category,
+      ram: req.body.ram,
+      storage: req.body.storage,
+      size: req.body.size,
       discountPrice: req.body.discountPrice,
       stock: req.body.stock,
       images, // ✅ MATCHES SCHEMA

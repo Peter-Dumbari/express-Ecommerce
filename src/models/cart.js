@@ -7,6 +7,10 @@ const cartSchema = new mongoose.Schema(
       ref: "user",
       required: true,
     },
+    guestId: {
+      type: String,
+      default: null,
+    },
     items: [
       {
         product: {
@@ -38,7 +42,7 @@ const cartSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export const Cart = mongoose.model("cart", cartSchema);

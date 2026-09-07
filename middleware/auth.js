@@ -15,6 +15,7 @@ const auth = async (req, res, next) => {
     const user = await User.findById(payload.id).select("-password");
     if (!user)
       return res.status(401).json({ error: "Invalid token - user not found" });
+
     req.user = user;
     next();
   } catch (error) {
