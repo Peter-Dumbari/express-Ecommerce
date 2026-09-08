@@ -1,5 +1,5 @@
 import express from "express";
-import auth from "../../middleware/auth.js";
+import { auth, optionalAuth } from "../../middleware/auth.js";
 import {
   addToCart,
   clearCart,
@@ -10,10 +10,10 @@ import {
 
 const router = express.Router();
 
-router.post("/add", auth, addToCart);
-router.get("/", auth, getUserCart);
-router.put("/update", auth, updateUserCart);
-router.delete("/clear", auth, clearCart);
-router.delete("/remove/:productId", auth, removeFromCart);
+router.post("/add", optionalAuth, addToCart);
+router.get("/", optionalAuth, getUserCart);
+router.put("/update", optionalAuth, updateUserCart);
+router.delete("/clear", optionalAuth, clearCart);
+router.delete("/remove/:productId", optionalAuth, removeFromCart);
 
 export default router;

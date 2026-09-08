@@ -9,7 +9,7 @@ import {
   getProductById,
   productUpdate,
 } from "../controllers/productController.js";
-import auth from "../../middleware/auth.js";
+import { auth } from "../../middleware/auth.js";
 import isAdminOnly from "../../middleware/isAdmin.js";
 import uploadImage from "../../config/multer.js";
 
@@ -20,7 +20,7 @@ router.post(
   auth,
   isAdminOnly,
   uploadImage.array("images", 10),
-  createProduct
+  createProduct,
 );
 router.get("/", getAllProducts);
 router.get("/:id", getProductById);

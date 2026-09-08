@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
 import { User } from "../src/models/user.js";
+import asyncHandler from "express-async-handler";
 
-const auth = async (req, res, next) => {
+export const auth = async (req, res, next) => {
   const authHeader = req.header("Authorization");
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -23,4 +24,22 @@ const auth = async (req, res, next) => {
   }
 };
 
-export default auth;
+export const optionalAuth = asyncHandler(async (req, res, next) => {
+  const token = req.cookies.token;
+
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = await User.findById(decoded.id).select("-password");
+
+    return next();
+  } catch (error) {
+    req.user = null;
+    return next();
+  }
+});

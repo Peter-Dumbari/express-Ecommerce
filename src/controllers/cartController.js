@@ -1,27 +1,61 @@
 import asyncHandler from "express-async-handler";
 import { Product } from "../models/product.js";
 import { Cart } from "../models/cart.js";
+import crypto from "crypto";
 
 export const addToCart = asyncHandler(async (req, res) => {
-  const userID = req.user._id;
   const { productId, quantity } = req.body;
   const product = await Product.findById(productId);
   if (!product) {
     return res.status(404).json({ message: "Product not found" });
   }
 
-  let cart = await Cart.findOne({ user: userID });
+  // let cart = await Cart.findOne({ user: userID });
+  let cart;
 
-  if (!cart) {
-    cart = await Cart.create({
-      user: userID,
-      items: [{ product: productId, quantity }],
-    });
-    return res.status(201).json(cart);
+  if (req.user) {
+    const userID = req.user._id;
+
+    cart = await Cart.findOne({ user: userID });
+
+    if (!cart) {
+      cart = await Cart.create({
+        user: userID,
+        items: [{ product: productId, quantity }],
+      });
+      return res.status(201).json(cart);
+    }
+  } else {
+    let guestId = req.cookies.guestId;
+    if (!guestId) {
+      guestId = crypto.randomUUID();
+
+      res.cookie("guestId", guestId, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+    }
+    cart = await Cart.findOne({ guestId });
+
+    if (!cart) {
+      cart = await Cart.create({
+        guestId,
+        items: [
+          {
+            product: productId,
+            quantity,
+          },
+        ],
+      });
+      return res.status(201).json(cart);
+    }
   }
+
   // If cart exists → check if product already inside
   const itemIndex = cart.items.findIndex(
-    (item) => item.product.toString() === productId
+    (item) => item.product.toString() === productId,
   );
 
   if (itemIndex !== -1) {
@@ -36,21 +70,63 @@ export const addToCart = asyncHandler(async (req, res) => {
   res.status(200).json(cart);
 });
 
+// export const getUserCart = asyncHandler(async (req, res) => {
+//   try {
+//     const cart = await Cart.findOne({ user: req.user._id }).populate({
+//       path: "items.product",
+//       select: "name price images stock",
+//     });
+
+//     if (!cart) return res.json({ items: [] });
+
+//     return res.json(cart);
+//   } catch (error) {
+//     console.log("error", error);
+//   }
+// });
+
 export const getUserCart = asyncHandler(async (req, res) => {
   try {
-    const cart = await Cart.findOne({ user: req.user._id }).populate({
-      path: "items.product",
-      select: "name price images stock",
-    });
+    let cart;
 
-    if (!cart) return res.json({ items: [] });
+    if (req.user) {
+      // Authenticated user
+      cart = await Cart.findOne({
+        user: req.user._id,
+      }).populate({
+        path: "items.product",
+        select: "name price images stock",
+      });
+    } else {
+      // Guest user
+      const guestId = req.cookies.guestId;
+
+      // Guest doesn't have a cart yet
+      if (!guestId) {
+        return res.json({ items: [] });
+      }
+
+      cart = await Cart.findOne({
+        guestId,
+      }).populate({
+        path: "items.product",
+        select: "name price images stock",
+      });
+    }
+
+    if (!cart) {
+      return res.json({ items: [] });
+    }
 
     return res.json(cart);
   } catch (error) {
     console.log("error", error);
+
+    return res.status(500).json({
+      message: "Server error",
+    });
   }
 });
-
 export const updateUserCart = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { productId, quantity } = req.body;
@@ -80,7 +156,7 @@ export const removeFromCart = asyncHandler(async (req, res) => {
   if (!cart) return res.status(404).json({ message: "Cart not found" });
 
   cart.items = cart.items.filter(
-    (item) => item.product.toString() !== productId
+    (item) => item.product.toString() !== productId,
   );
 
   await cart.save();
