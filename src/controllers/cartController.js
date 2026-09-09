@@ -149,18 +149,44 @@ export const updateUserCart = asyncHandler(async (req, res) => {
 });
 
 export const removeFromCart = asyncHandler(async (req, res) => {
-  const userId = req.user._id;
   const { productId } = req.params;
 
-  const cart = await Cart.findOne({ user: userId });
-  if (!cart) return res.status(404).json({ message: "Cart not found" });
+  let cart;
 
+  if (req.user) {
+    // Authenticated user
+    cart = await Cart.findOne({
+      user: req.user._id,
+    });
+  } else {
+    // Guest user
+    const guestId = req.cookies.guestId;
+
+    if (!guestId) {
+      return res.status(404).json({
+        message: "Guest cart not found",
+      });
+    }
+
+    cart = await Cart.findOne({
+      guestId,
+    });
+  }
+
+  if (!cart) {
+    return res.status(404).json({
+      message: "Cart not found",
+    });
+  }
+
+  // Remove product from cart
   cart.items = cart.items.filter(
     (item) => item.product.toString() !== productId,
   );
 
   await cart.save();
-  res.json(cart);
+
+  res.status(200).json(cart);
 });
 
 export const clearCart = asyncHandler(async (req, res) => {
