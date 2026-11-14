@@ -15,14 +15,23 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+
     phone: {
       type: String,
       required: true,
       trim: true,
     },
+
+    authProvider: {
+      type: String,
+      enum: ["guest", "local", "google", "facebook"],
+      default: "guest",
+    },
     password: {
       type: String,
-      required: true,
+      required: function () {
+        return this.authProvider === "local";
+      },
       minlength: 6,
     },
     role: {
@@ -37,11 +46,6 @@ const userSchema = new mongoose.Schema(
     isVerified: {
       type: Boolean,
       default: false,
-    },
-    authProvider: {
-      type: String,
-      enum: ["local", "google", "facebook"],
-      default: "local",
     },
     googleId: { type: String },
     facebookId: { type: String },
@@ -60,7 +64,7 @@ const userSchema = new mongoose.Schema(
       type: Date,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 userSchema.pre("save", async function (next) {
