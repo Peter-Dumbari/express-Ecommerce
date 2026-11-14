@@ -2,12 +2,15 @@ import asyncHandler from "express-async-handler";
 import { Order } from "../models/order.js";
 import flw from "../../config/flutterwave.js";
 import axios from "axios";
+import { User } from "../models/user.js";
+import { Cart } from "../models/cart.js";
 
 export const createOrder = asyncHandler(async (req, res) => {
   const {
     products,
     totalAmount,
     customerEmail,
+    phone,
     customerName,
     paymentMethod,
     shippingAddress,
@@ -23,13 +26,29 @@ export const createOrder = asyncHandler(async (req, res) => {
     price: prod.product.price,
   }));
 
+  let user = await User.findOne({
+    email: customerEmail.toLowerCase(),
+  });
+
+  if (!user) {
+    user = await User.create({
+      name: customerName,
+      email: customerEmail.toLowerCase(),
+      phone,
+      address: shippingAddress,
+    });
+  }
+
   const order = await Order.create({
-    user: req.user._id,
+    user: user._id,
+    guestId: req.cookies.guestId,
     items,
     totalAmount,
     shippingAddress,
     paymentMethod,
   });
+
+  console.log("order", order);
 
   if (paymentMethod === "cod") {
     return res.status(201).json({
@@ -71,17 +90,27 @@ export const createOrder = asyncHandler(async (req, res) => {
           Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
-    const order = await Order.create({
-      user: req.user._id,
-      products,
-      totalAmount,
-      customerEmail,
-      shippingAddress,
-      paymentMethod: "flutterwave",
-    });
+    // const order = await Order.create({
+    //   user: req.user._id,
+    //   products,
+    //   totalAmount,
+    //   customerEmail,
+    //   shippingAddress,
+    //   paymentMethod: "flutterwave",
+    // });
+
+    if (req.user?._id) {
+      await Cart.findOneAndDelete({
+        user: req.user._id,
+      });
+    } else if (req.cookies?.guestId) {
+      await Cart.findOneAndDelete({
+        guestId: req.cookies.guestId,
+      });
+    }
 
     return res.status(201).json({
       success: true,
@@ -126,13 +155,42 @@ export const verifyFlutterWavePayment = asyncHandler(async (req, res) => {
 });
 
 export const getUserOrders = asyncHandler(async (req, res) => {
-  const userId = req.user._id;
+  try {
+    let orders;
 
-  const orders = await Order.find({ user: userId }).sort({
-    createdAt: -1,
-  });
+    if (req.user?._id) {
+      // Logged-in user
+      orders = await Order.find({
+        user: req.user._id,
+      }).sort({
+        createdAt: -1,
+      });
+    } else if (req.cookies?.guestId) {
+      // Guest user
+      orders = await Order.find({
+        guestId: req.cookies.guestId,
+      }).sort({
+        createdAt: -1,
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "No user or guest identified",
+      });
+    }
 
-  res.json({ success: true, orders });
+    res.json({
+      success: true,
+      orders,
+    });
+  } catch (error) {
+    console.error("Get orders error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
 });
 
 export const getAllOrders = asyncHandler(async (req, res) => {
