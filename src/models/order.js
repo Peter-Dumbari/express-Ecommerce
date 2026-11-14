@@ -7,6 +7,10 @@ const orderSchema = new mongoose.Schema(
       ref: "user",
       required: true,
     },
+    guestId: {
+      type: String,
+      default: null,
+    },
     items: [
       {
         product: {
@@ -50,7 +54,7 @@ const orderSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export const Order = mongoose.model("order", orderSchema);
