@@ -24,22 +24,30 @@ export const auth = async (req, res, next) => {
   }
 };
 
-export const optionalAuth = asyncHandler(async (req, res, next) => {
-  const token = req.cookies.token;
+export const optionalAuth = async (req, res, next) => {
+  const authHeader = req.header("Authorization");
 
-  if (!token) {
-    req.user = null;
+  // No JWT → continue as guest
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return next();
   }
+
+  const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.user = await User.findById(decoded.id).select("-password");
+    const user = await User.findById(payload.id).select("-password");
 
-    return next();
+    if (user) {
+      req.user = user;
+    }
+
+    next();
   } catch (error) {
-    req.user = null;
-    return next();
+    // Invalid token
+    return res.status(401).json({
+      error: "Token invalid or expired",
+    });
   }
-});
+};
